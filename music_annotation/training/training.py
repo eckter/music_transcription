@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as ET
 import numpy as np
-import pickle
 import torch
 import matplotlib.pyplot as plt
 
@@ -30,7 +29,7 @@ def is_valid(xml):
 def get_mean(dataset):
     mean = np.zeros(freq_depth)
     for i in range(len(dataset)):
-        x, _, _ = dataset[i]
+        x, _ = dataset[i]
         mean += x.mean(axis=0).numpy()
     mean /= len(dataset)
     return mean
@@ -39,7 +38,7 @@ def get_mean(dataset):
 def get_std(dataset, mean):
     std = np.zeros(freq_depth)
     for i in range(len(dataset)):
-        x, _, _ = dataset[i]
+        x, _ = dataset[i]
         centered = x.numpy() - mean
         std += np.square(centered).mean(axis=0)
     std /= len(dataset)
@@ -52,17 +51,14 @@ def loss_function(pred, target):
     return loss.mean()
 
 
-def eval_results(network, data, loss, gen=False, device="cuda"):
+def eval_results(network, data, loss, device="cuda"):
     with torch.no_grad():
         network.eval()
         Xs = []
         ys = []
         for i in range(min(32, len(data))):
-            X, y, z = data[i]
-            if gen:
-                Xs.append(z)
-            else:
-                Xs.append(X)
+            X, y = data[i]
+            Xs.append(X)
             ys.append(y)
         X = torch.stack(Xs)
         y = torch.stack(ys)
@@ -95,24 +91,17 @@ def plot_both(X, y):
     plt.show()
 
 
-def train(data_root, out_root, reload=True, resave=True, workers=0):
+def train(data_root, out_root, workers=0):
     assert (Path(data_root).is_dir())
     Path(out_root).mkdir(exist_ok=True)
 
-    if reload:
-        root = Path(data_root)
-        files = list(filter(is_valid, list(root.glob("*lead.xml"))[:128]))
-        val_files = files[:16]
-        train_files = files[16:64]
+    root = Path(data_root)
+    files = list(filter(is_valid, list(root.glob("*lead.xml"))[:128]))
+    val_files = files
+    train_files = files
 
-        train_data = SongDataset(train_files)
-        val_data = SongDataset(val_files)
-        if resave:
-            p = pickle.Pickler(open("music_train_single.p", "wb"))
-            p.fast = True
-            p.dump([train_data, val_data])
-    else:
-        train_data, val_data = pickle.load(open("music_train_single.p", "rb"))
+    train_data = SongDataset(train_files)
+    val_data = SongDataset(val_files)
 
     train_data.sample_size = 2048
     val_data.sample_size = 2048
@@ -133,7 +122,7 @@ def train(data_root, out_root, reload=True, resave=True, workers=0):
     n_step = 0
 
     for i in range(10000000):
-        for X_train, y_train, generated in loader:
+        for X_train, y_train in loader:
             network.train()
 
             y_train = torch.nn.MaxPool1d(samples_per_out)(y_train.transpose(1, 2)).transpose(1, 2)
@@ -150,8 +139,8 @@ def train(data_root, out_root, reload=True, resave=True, workers=0):
             optimizer.step()
 
             if n_step % 200 == 0:
-                train_loss = eval_results(network, train_data, loss_function, gen=False)
-                val_loss = eval_results(network, val_data, loss_function, gen=False)
+                train_loss = eval_results(network, train_data, loss_function, device=device)
+                val_loss = eval_results(network, val_data, loss_function, device=device)
                 print(f"{n_step}: train: {train_loss}, val: {val_loss}")
 
             n_step += 1

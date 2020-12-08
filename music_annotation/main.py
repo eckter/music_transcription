@@ -2,7 +2,7 @@ from .training import train
 
 
 def run():
-    root = '/mnt/data/music'
+    root = '.'
     data = f'{root}/data'
     out = f'{root}/out'
     train(data, out)

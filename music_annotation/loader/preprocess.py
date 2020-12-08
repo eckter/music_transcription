@@ -74,7 +74,7 @@ def get_sample_times(xml, samples_per_out=4):
     return f(new_Xs)
 
 
-def load(f, multithread):
+def load_audio(f):
     f = Path(f)
     sample_times = get_sample_times(f)
     name = f.stem.split("_")[0]
@@ -82,24 +82,17 @@ def load(f, multithread):
     if not ogg.is_file():
         ogg = Path(f).parent / (name + ".wav")
     assert(ogg.is_file())
-    generated = Path(f).parent / "generated_from_xml" / (name + ".wav")
-    s = read_spectro_samples(ogg, sample_times)
-    if False and generated.is_file():
-        gen = read_spectro_samples(generated, sample_times)
-        gen = gen.reshape(-1, freq_depth)
-    else:
-        gen = np.array([])
-    t = read_and_transform(f, s.shape[0], sample_times)
+    audio_processed = read_spectro_samples(ogg, sample_times).reshape(-1)
+    return audio_processed
+
+def load_tab(f, audio_len):
+    f = Path(f)
+    sample_times = get_sample_times(f)
+    name = f.stem.split("_")[0]
+    t = read_and_transform(f, audio_len, sample_times)
     rhythm = Path(f).parent / (name + "_rhythm.xml")
     if rhythm.is_file():
-        t += read_and_transform(rhythm, s.shape[0], sample_times)
+        t += read_and_transform(rhythm, audio_len, sample_times)
         t = t.clip(0, 1)
-
-    s = s.reshape(-1)
     t = t.reshape(-1)
-    gen = gen.reshape(-1)
-    if multithread:
-        s = Array('f', s, lock=False)
-        t = Array('f', t, lock=False)
-        gen = Array('f', gen, lock=False)
-    return s, t, gen
+    return t

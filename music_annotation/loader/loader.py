@@ -5,7 +5,8 @@ import random
 from tqdm import tqdm
 from multiprocessing import Array
 
-from .preprocess import load, freq_depth
+from .preprocess import freq_depth
+from .save_files import load_with_saves
 
 
 class SongDataset(torch.utils.data.TensorDataset):
@@ -13,7 +14,7 @@ class SongDataset(torch.utils.data.TensorDataset):
         super(SongDataset).__init__()
         if not multithread:
             multiplier = 1
-        self.data = [load(f, multithread) for f in tqdm(files)]
+        self.data = [load_with_saves(f, multithread) for f in tqdm(files)]
         self.multiplier = multiplier
         self.sample_size = sample_files
         self.overfit = overfit
@@ -33,17 +34,15 @@ class SongDataset(torch.utils.data.TensorDataset):
             self.data[i] = (Array('f', s, lock=False), Array('f', t, lock=False), Array('f', g, lock=False))
 
     @staticmethod
-    def _extract(s, beats, generated, size=freq_depth, overfit=False):
+    def _extract(s, beats, size=freq_depth, overfit=False):
         s = np.array(s).reshape(-1, freq_depth)
-        generated = np.array(generated).reshape(-1, freq_depth)
         beats = np.array(beats).reshape(s.shape[0], -1)
         mini = 0
         maxi = max(len(s) - size, 0)
         begin = 0 if overfit else random.randint(mini, maxi)
         x = torch.tensor(s[begin:(begin + size)], dtype=torch.float32)
         y = torch.tensor(beats[begin:(begin + size)], dtype=torch.float32)
-        gen = torch.tensor(generated[begin:(begin + size)], dtype=torch.float32)
-        return x, y, gen
+        return x, y
 
 
 def get_loader(dataset, workers=16, batch=64):
