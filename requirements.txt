@@ -1,8 +1,9 @@
-numpy
-scipy
-librosa
 SoundFile
 kymatio
+librosa
+matplotlib
+numpy
+pytest
+scipy
 torch
 tqdm
-matplotlib
