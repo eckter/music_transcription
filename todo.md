@@ -7,4 +7,6 @@
 * Imorove logs and saves
 * try some boosting methods
 * see if I can use some audio separation tool such as https://github.com/deezer/spleeter to filter guitar sounds
-* add tests
+* add tests (wip)
+* clean code, follow pep 8
+* write documentation
