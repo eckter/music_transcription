@@ -7,18 +7,20 @@ version_audio = "1.0"
 version_tab = "1.0"
 
 
-def try_read_file(save_path, backup_func):
+def try_read_file(save_path, backup_func, force_reload=False):
     try:
-        return pickle.load(open(save_path, "rb"))
+        if not force_reload:
+            return pickle.load(open(save_path, "rb"))
     except:
-        data = backup_func()
-        p = pickle.Pickler(open(str(save_path), "wb"))
-        p.fast = True
-        p.dump(data)
-        return data
+        pass
+    data = backup_func()
+    p = pickle.Pickler(open(str(save_path), "wb"))
+    p.fast = True
+    p.dump(data)
+    return data
 
 
-def load_with_saves(xml_path, multithread=False):
+def load_with_saves(xml_path, force_reload=True, multithread=False):
     file_id = xml_path.stem
     save_file_name = f"{file_id}.p"
 
@@ -28,8 +30,8 @@ def load_with_saves(xml_path, multithread=False):
     for p in [audio_path, tab_path]:
         p.parent.mkdir(parents=True, exist_ok=True)
     
-    a = try_read_file(audio_path, lambda: load_audio(xml_path))
-    t = try_read_file(tab_path, lambda: load_tab(xml_path, a.shape[0] // freq_depth))
+    a = try_read_file(audio_path, lambda: load_audio(xml_path), force_reload)
+    t = try_read_file(tab_path, lambda: load_tab(xml_path), force_reload)
 
     if multithread:
         a = Array('f', s, lock=False)
