@@ -85,14 +85,14 @@ def load_audio(f):
     audio_processed = read_spectro_samples(ogg, sample_times).reshape(-1)
     return audio_processed
 
-def load_tab(f, audio_len):
+def load_tab(f):
     f = Path(f)
     sample_times = get_sample_times(f)
     name = f.stem.split("_")[0]
-    t = read_and_transform(f, audio_len, sample_times)
+    t = read_and_transform(f, sample_times)
     rhythm = Path(f).parent / (name + "_rhythm.xml")
     if rhythm.is_file():
-        t += read_and_transform(rhythm, audio_len, sample_times)
+        t += read_and_transform(rhythm, sample_times)
         t = t.clip(0, 1)
     t = t.reshape(-1)
     return t

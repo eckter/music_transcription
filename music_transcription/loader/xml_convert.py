@@ -47,7 +47,7 @@ def add_chord(c, chords, out, n_frets, sample_times):
     out[index] += frame
 
 
-def read_tab(xml, seq_length, sample_times, n_frets=25):
+def read_tab(xml, sample_times, n_frets=25):
     tree = ET.parse(str(xml))
     root = tree.getroot()
     chords = list(root.find("chordTemplates"))
@@ -55,7 +55,7 @@ def read_tab(xml, seq_length, sample_times, n_frets=25):
     levels = list(root.find("levels"))
     levels.sort(key=lambda x: int(x.get("difficulty")))
 
-    out = np.zeros([seq_length, 6, n_frets + 1])
+    out = np.zeros([len(sample_times), 6, n_frets + 1])
 
     for level in levels:
         notes = level.find("notes")
@@ -87,7 +87,7 @@ def transform_one(y):
     return intermediate.clip(0, 1)
 
 
-def read_and_transform(xml, seq_length, sample_times, n_frets=25):
-    y = read_tab(xml, seq_length, sample_times, n_frets)
+def read_and_transform(xml, sample_times, n_frets=25):
+    y = read_tab(xml, sample_times, n_frets)
     return transform_one(y)
 
