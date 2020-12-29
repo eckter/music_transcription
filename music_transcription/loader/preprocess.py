@@ -78,9 +78,9 @@ def load_audio(f):
     f = Path(f)
     sample_times = get_sample_times(f)
     name = f.stem.split("_")[0]
-    ogg = Path(f).parent / (name + ".ogg")
+    ogg = Path(f).parent / "output2" / name / "other.wav"
     if not ogg.is_file():
-        ogg = Path(f).parent / (name + ".wav")
+        ogg = Path(f).parent / (name + ".ogg")
     assert(ogg.is_file())
     audio_processed = read_spectro_samples(ogg, sample_times).reshape(-1)
     return audio_processed
