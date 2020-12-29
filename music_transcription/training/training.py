@@ -73,7 +73,7 @@ def range_to_1(l):
     return np.array(range(l)) / l
 
 
-def plot_both(X, y):
+def plot_both(X, y, save_path=None):
     plt.figure(num=None, figsize=(8, 8), dpi=800, facecolor='w', edgecolor='k')
 
     from scipy import interpolate
@@ -88,7 +88,10 @@ def plot_both(X, y):
     plt.imshow(y, alpha=0.6, cmap="magma")
     plt.axis('off')
     plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
-    plt.show()
+    if save_path:
+        plt.savefig(str(save_path))
+    else:
+        plt.show()
 
 
 def train(data_root, out_root, workers=0):
@@ -96,9 +99,9 @@ def train(data_root, out_root, workers=0):
     Path(out_root).mkdir(exist_ok=True)
 
     root = Path(data_root)
-    files = list(filter(is_valid, list(root.glob("*lead.xml"))[:128]))
-    val_files = files
-    train_files = files
+    files = list(filter(is_valid, list(root.glob("*lead.xml"))[:-1]))
+    val_files = files[:64]
+    train_files = files[64:]
 
     train_data = SongDataset(train_files)
     val_data = SongDataset(val_files)
@@ -121,6 +124,10 @@ def train(data_root, out_root, workers=0):
     optimizer = torch.optim.Adam(network.parameters(), lr=2e-5)
     n_step = 0
 
+    x_sample, y_sample = val_data[0]
+    y_sample = torch.nn.MaxPool1d(samples_per_out)(y_sample.unsqueeze(0).transpose(1, 2)).transpose(1, 2)[0]
+    plot_both(x_sample, y_sample, "base.png")
+
     for i in range(10000000):
         for X_train, y_train in loader:
             network.train()
@@ -142,19 +149,13 @@ def train(data_root, out_root, workers=0):
                 train_loss = eval_results(network, train_data, loss_function, device=device)
                 val_loss = eval_results(network, val_data, loss_function, device=device)
                 print(f"{n_step}: train: {train_loss}, val: {val_loss}")
+            if n_step % 2000 == 0:
+                network.eval()
+                output, _ = network(x_sample.unsqueeze(0).to(device))
+                plot_both(x_sample, output, f"{n_step:09}.png")
 
             n_step += 1
 
-        if n_step >= 200000:
+        if n_step >= 100000:
             break
-    i = 1
-    train_data.sample_size = 1024
-    train_data.overfit = False
-    X, y, z = train_data[i]
-    y = torch.nn.MaxPool1d(samples_per_out)(y.unsqueeze(0).transpose(1, 2)).transpose(1, 2)[0]
-    plot_both(X, y)
-    network.eval()
-    output, _ = network(X.unsqueeze(0).to(device))
-    mask = y.max(dim=-1, keepdim=True)[0].expand_as(output).to(device)
-    plot_both(X, output * mask)
 
