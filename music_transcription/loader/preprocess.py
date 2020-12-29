@@ -35,7 +35,7 @@ def read_spectro_samples(ogg, samples):
     data, samplerate = soundfile.read(str(ogg), always_2d=True)
     data = data.mean(axis=1)
 
-    data = get_harmonics(data)
+    #data = get_harmonics(data)
     data = np.concatenate([data, np.zeros(int(samplerate * 0.5))])
     music_time = len(data) / samplerate
 
