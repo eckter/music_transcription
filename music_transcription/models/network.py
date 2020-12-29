@@ -2,6 +2,7 @@ import torch
 import numpy as np
 
 from ..loader.preprocess import freq_depth
+from .utils import GaussianNoise
 
 
 samples_per_out = 8
@@ -15,13 +16,16 @@ class Network(torch.nn.Module):
         self.scaling_std = torch.tensor(scaling_std, dtype=torch.float32).to(device)
 
         self.dense = torch.nn.Sequential(
-            self._layer(freq_depth, 64, 3),
+            GaussianNoise(),
+            self._layer(freq_depth, 512, 3),
+            self._layer(512, 256, 3),
             torch.nn.AvgPool1d(2),
-            self._layer(64, 32, 3),
+            self._layer(256, 256, 3),
             torch.nn.AvgPool1d(2),
-            self._layer(32, 32, 3),
+            self._layer(256, 256, 3),
             torch.nn.AvgPool1d(2),
-            torch.nn.Conv1d(32, 49, 1, padding=0, bias=True),
+            self._layer(256, 128, 1),
+            torch.nn.Conv1d(128, 49, 1, padding=0, bias=True),
         )
         self.sigmoid = torch.nn.Sigmoid()
 
