@@ -73,14 +73,14 @@ def range_to_1(l):
     return np.array(range(l)) / l
 
 
-def plot_both(X, y, save_path=None):
+def plot_both(X, y, mean, std, save_path=None):
     plt.figure(num=None, figsize=(8, 8), dpi=800, facecolor='w', edgecolor='k')
 
     from scipy import interpolate
     y = y.cpu().data.T
     if y.shape[0] == 1:
         y = np.repeat(y, 2, 0)
-    X = X.cpu().data.T
+    X = ((X.cpu().data - mean) / std).T
     f = interpolate.interp2d(range_to_1(y.shape[1]), range_to_1(y.shape[0]), y)
     y = f(range_to_1(X.shape[1]), range_to_1(X.shape[0]))
 
@@ -126,7 +126,7 @@ def train(data_root, out_root, workers=0):
 
     x_sample, y_sample = val_data[0]
     y_sample = torch.nn.MaxPool1d(samples_per_out)(y_sample.unsqueeze(0).transpose(1, 2)).transpose(1, 2)[0]
-    plot_both(x_sample, y_sample, "base.png")
+    plot_both(x_sample, y_sample, mean, std, "base.png")
 
     for i in range(10000000):
         for X_train, y_train in loader:
@@ -152,7 +152,7 @@ def train(data_root, out_root, workers=0):
             if n_step % 2000 == 0:
                 network.eval()
                 output, _ = network(x_sample.unsqueeze(0).to(device))
-                plot_both(x_sample, output, f"{n_step:09}.png")
+                plot_both(x_sample, output, mean, std, f"{n_step:09}.png")
 
             n_step += 1
 
