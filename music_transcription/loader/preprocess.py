@@ -9,7 +9,7 @@ from kymatio.numpy import Scattering1D
 
 from .xml_convert import read_and_transform
 
-freq_depth = 128
+freq_depth = 256
 
 
 def get_harmonics(data):
@@ -39,24 +39,17 @@ def read_spectro_samples(ogg, samples):
     data = np.concatenate([data, np.zeros(int(samplerate * 0.5))])
     music_time = len(data) / samplerate
 
-    mfcc = librosa.feature.mfcc(y=data, sr=samplerate, n_mfcc=64 - 12)
-    chroma = librosa.feature.chroma_cqt(y=data, sr=samplerate)
-    # spectro = librosa.feature.melspectrogram(y=data, sr=samplerate, n_mels=128, n_fft=2048)
-    spectro = librosa.stft(data, n_fft=126)
-    spectro_magnitude = librosa.power_to_db(np.abs(spectro))
+    hop_length = 256
+    mfcc = librosa.feature.mfcc(y=data, sr=samplerate, n_mfcc=64, hop_length=hop_length)
+    melspectro = librosa.feature.melspectrogram(y=data, sr=samplerate, n_mels=256 - 64 - 12, n_fft=2048, fmax=16000, power=1, hop_length=hop_length)
+    chroma = librosa.feature.chroma_cqt(y=data, sr=samplerate, hop_length=hop_length)
 
-    T = data.shape[-1]
-    J = 7
-    Q = 16
-    #  scattering = Scattering1D(J, T, Q)(data)
-    #  scattering = scattering[:128, :]
 
     mfcc = resample(mfcc, samples, music_time)
     chroma = resample(chroma, samples, music_time)
-    spectro = resample(spectro_magnitude, samples, music_time)
-    #  scattering = resample(scattering, samples, music_time)
+    mel = resample(melspectro, samples, music_time)
 
-    res = np.concatenate([mfcc, chroma, spectro], axis=0).T
+    res = np.concatenate([mfcc, chroma, mel], axis=0).T
     assert res.shape[1] == freq_depth, f"{res.shape[1]} != {freq_depth}"
     return res
 

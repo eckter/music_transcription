@@ -3,7 +3,7 @@ import pickle
 from .preprocess import load_audio, load_tab, freq_depth
 
 save_root = Path(__file__).parents[2] / "preprocessed_data"
-version_audio = "1.0"
+version_audio = "1.1"
 version_tab = "1.0"
 
 
