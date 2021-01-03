@@ -54,16 +54,14 @@ def read_spectro_samples(ogg, samples):
     return res
 
 
-def get_sample_times(xml, samples_per_out=4):
+def get_sample_times(xml, samples_per_beat=128):
     tree = ET.parse(str(xml))
     root = tree.getroot()
     beats = [float(x.get("time")) for x in root.find("ebeats")]
     Xs = np.array(range(len(beats)))
     f = interpolate.interp1d(Xs, beats)
 
-    sample_per_beat = 8 * samples_per_out
-
-    new_Xs = np.array(range((len(beats) - 1) * sample_per_beat)) / sample_per_beat
+    new_Xs = np.array(range((len(beats) - 1) * samples_per_beat)) / samples_per_beat
     return f(new_Xs)
 
 
