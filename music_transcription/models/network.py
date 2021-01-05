@@ -36,7 +36,7 @@ class Network(torch.nn.Module):
         x = self.dense(x.transpose(1, 2)).transpose(1, 2)
         x = self.sigmoid(x)
 
-        return x, 0
+        return x
 
     @staticmethod
     def _layer(in_depth, k,

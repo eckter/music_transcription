@@ -62,7 +62,7 @@ def eval_results(network, data, loss, device="cuda"):
             ys.append(y)
         X = torch.stack(Xs)
         y = torch.stack(ys)
-        pred, _ = network(X.to(device))
+        pred = network(X.to(device))
         y = torch.nn.MaxPool1d(samples_per_out)(y.transpose(1, 2).to(device)).transpose(1, 2)
         mask = y.max(dim=-1, keepdim=True)[0].expand_as(pred)
         pred = pred * mask
@@ -138,7 +138,7 @@ def train(data_root, out_root, workers=0):
 
             optimizer.zero_grad()
 
-            outputs, _ = network(x_train)
+            outputs = network(x_train)
             tab_loss = loss_function(outputs, y_train)
             loss = tab_loss
 
@@ -151,7 +151,7 @@ def train(data_root, out_root, workers=0):
                 print(f"{n_step}: train: {train_loss}, val: {val_loss}")
             if n_step % 2000 == 0:
                 network.eval()
-                output, _ = network(x_sample.unsqueeze(0).to(device))
+                output = network(x_sample.unsqueeze(0).to(device))
                 plot_both(x_sample, output, mean, std, f"{n_step:09}.png")
 
             n_step += 1
