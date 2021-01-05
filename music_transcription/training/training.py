@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
+from .save import save
 from ..models import Network
 from ..loader import get_loader, SongDataset
 from ..models.network import samples_per_out
@@ -150,6 +151,7 @@ def train(data_root, out_root, workers=0):
                 val_loss = eval_results(network, val_data, loss_function, device=device)
                 print(f"{n_step}: train: {train_loss}, val: {val_loss}")
             if n_step % 2000 == 0:
+                save(f"{out_root}/{n_step}.pt", network, optimizer, n_step)
                 network.eval()
                 output = network(x_sample.unsqueeze(0).to(device))
                 plot_both(x_sample, output, mean, std, f"{n_step:09}.png")
