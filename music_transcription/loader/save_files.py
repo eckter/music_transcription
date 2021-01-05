@@ -20,7 +20,7 @@ def try_read_file(save_path, backup_func, force_reload=False):
     return data
 
 
-def load_with_saves(xml_path, force_reload=True, multithread=False):
+def load_with_saves(xml_path, force_reload=False, multithread=False):
     file_id = xml_path.stem
     save_file_name = f"{file_id}.p"
 
