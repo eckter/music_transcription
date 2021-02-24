@@ -14,10 +14,12 @@ class SongDataset(torch.utils.data.TensorDataset):
         super(SongDataset).__init__()
         if not multithread:
             multiplier = 1
-        self.data = [load_with_saves(f, multithread=multithread) for f in tqdm(files)]
+        self.data = [load_with_saves(f) for f in tqdm(files)]
         self.multiplier = multiplier
         self.sample_size = sample_files
         self.overfit = overfit
+        if multithread:
+            self.to_multi()
 
     def __len__(self):
         return len(self.data) * self.multiplier

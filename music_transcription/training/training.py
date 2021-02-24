@@ -65,8 +65,8 @@ def eval_results(network, data, loss, device="cuda"):
         y = torch.stack(ys)
         pred = network(X.to(device))
         y = torch.nn.MaxPool1d(samples_per_out)(y.transpose(1, 2).to(device)).transpose(1, 2)
-        mask = y.max(dim=-1, keepdim=True)[0].expand_as(pred)
-        pred = pred * mask
+        #mask = y.max(dim=-1, keepdim=True)[0].expand_as(pred)
+        #pred = pred * mask
         return loss(pred, y).cpu().detach().item()
 
 
@@ -107,8 +107,9 @@ def train(data_root, out_root, workers=0):
     train_data = SongDataset(train_files)
     val_data = SongDataset(val_files)
 
-    train_data.sample_size = 2048
-    val_data.sample_size = 2048
+    train_data.sample_size = 2048 * 2
+    val_data.sample_size = 2048 * 4
+    val_data.overfit = True
 
     if workers > 0:
         train_data.to_multi()
@@ -122,10 +123,10 @@ def train(data_root, out_root, workers=0):
     device = "cuda"
     network = Network(device, scaling_mean=mean, scaling_std=std).to(device)
 
-    optimizer = torch.optim.Adam(network.parameters(), lr=2e-5)
+    optimizer = torch.optim.Adam(network.parameters(), lr=3e-5)
     n_step = 0
 
-    x_sample, y_sample = val_data[0]
+    x_sample, y_sample = val_data[1]
     y_sample = torch.nn.MaxPool1d(samples_per_out)(y_sample.unsqueeze(0).transpose(1, 2)).transpose(1, 2)[0]
     plot_both(x_sample, y_sample, mean, std, "base.png")
 
@@ -146,18 +147,19 @@ def train(data_root, out_root, workers=0):
             loss.backward()
             optimizer.step()
 
-            if n_step % 200 == 0:
+            if n_step % 100 == 0:
                 train_loss = eval_results(network, train_data, loss_function, device=device)
                 val_loss = eval_results(network, val_data, loss_function, device=device)
                 print(f"{n_step}: train: {train_loss}, val: {val_loss}")
-            if n_step % 2000 == 0:
+            if n_step % 400 == 0:
                 save(f"{out_root}/{n_step}.pt", network, optimizer, n_step)
+            if n_step % 400 == 0:
                 network.eval()
                 output = network(x_sample.unsqueeze(0).to(device))
                 plot_both(x_sample, output, mean, std, f"{n_step:09}.png")
 
             n_step += 1
 
-        if n_step >= 100000:
+        if n_step >= 30000:
             break
 

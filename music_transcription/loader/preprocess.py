@@ -54,7 +54,7 @@ def read_spectro_samples(ogg, samples):
     return res
 
 
-def get_sample_times(xml, samples_per_beat=128):
+def get_sample_times(xml, samples_per_beat=64):
     tree = ET.parse(str(xml))
     root = tree.getroot()
     beats = [float(x.get("time")) for x in root.find("ebeats")]

@@ -4,7 +4,7 @@ from .preprocess import load_audio, load_tab, freq_depth
 
 save_root = Path(__file__).parents[2] / "preprocessed_data"
 version_audio = "1.1"
-version_tab = "1.0"
+version_tab = "1.1"
 
 
 def try_read_file(save_path, backup_func, force_reload=False):
@@ -20,7 +20,7 @@ def try_read_file(save_path, backup_func, force_reload=False):
     return data
 
 
-def load_with_saves(xml_path, force_reload=False, multithread=False):
+def load_with_saves(xml_path, force_reload=False):
     file_id = xml_path.stem
     save_file_name = f"{file_id}.p"
 
@@ -33,7 +33,6 @@ def load_with_saves(xml_path, force_reload=False, multithread=False):
     a = try_read_file(audio_path, lambda: load_audio(xml_path), force_reload)
     t = try_read_file(tab_path, lambda: load_tab(xml_path), force_reload)
 
-    if multithread:
-        a = Array('f', s, lock=False)
-        t = Array('f', t, lock=False)
+    a = a.astype('float32')
+    t = t.astype('float32')
     return a, t

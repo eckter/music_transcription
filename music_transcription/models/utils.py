@@ -28,3 +28,18 @@ class GaussianNoise(nn.Module):
             sampled_noise = self.noise.expand(*x.size()).float().normal_() * scale
             x = x + sampled_noise
         return x
+
+
+class Clamp(torch.autograd.Function):
+    """
+    Clamps to a range but keeps the gradient
+    Useful to set the output to [0,1] after a sigmoid, because of floating point errors
+    Source: https://discuss.pytorch.org/t/exluding-torch-clamp-from-backpropagation-as-tf-stop-gradient-in-tensorflow/52404/2
+    """
+    @staticmethod
+    def forward(ctx, input):
+        return input.clamp(min=0, max=1)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output.clone()
