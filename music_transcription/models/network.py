@@ -9,8 +9,10 @@ samples_per_out = 32
 
 
 class Network(torch.nn.Module):
-    def __init__(self, device="cuda", scaling_mean=1, scaling_std=1):
+    def __init__(self, device="cuda", scaling_mean=1, scaling_std=1, onset_only=True):
         super(Network, self).__init__()
+
+        last_layer_depth = 1 if onset_only else 49
 
         self.scaling_mean = torch.tensor(scaling_mean, dtype=torch.float32).to(device)
         self.scaling_std = torch.tensor(scaling_std, dtype=torch.float32).to(device)
@@ -34,7 +36,7 @@ class Network(torch.nn.Module):
             torch.nn.MaxPool1d(2),
             self._layer(64, 64, 7),
             self._layer(64, 64, 7),
-            torch.nn.Conv1d(64, 49, 1, padding=0, bias=True),
+            torch.nn.Conv1d(64, last_layer_depth, 1, padding=0, bias=True),
         )
         self.sigmoid = torch.nn.Sigmoid()
 

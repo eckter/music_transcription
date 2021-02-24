@@ -10,7 +10,7 @@ from .save_files import load_with_saves
 
 
 class SongDataset(torch.utils.data.TensorDataset):
-    def __init__(self, files, multiplier=1, multithread=False, overfit=False, sample_length=2048):
+    def __init__(self, files, multiplier=1, multithread=False, overfit=False, sample_length=2048, onset_only=True):
         super(SongDataset).__init__()
         if not multithread:
             multiplier = 1
@@ -18,6 +18,7 @@ class SongDataset(torch.utils.data.TensorDataset):
         self.multiplier = multiplier
         self.sample_length = sample_length
         self.overfit = overfit
+        self.onset_only = onset_only
         if multithread:
             self.to_multi()
 
@@ -35,8 +36,7 @@ class SongDataset(torch.utils.data.TensorDataset):
         for i, (s, t, g) in enumerate(self.data):
             self.data[i] = (Array('f', s, lock=False), Array('f', t, lock=False), Array('f', g, lock=False))
 
-    @staticmethod
-    def _extract(s, beats, size, overfit=False):
+    def _extract(self, s, beats, size, overfit=False):
         s = np.array(s).reshape(-1, freq_depth)
         beats = np.array(beats).reshape(s.shape[0], -1)
         mini = 0
@@ -44,6 +44,8 @@ class SongDataset(torch.utils.data.TensorDataset):
         begin = 0 if overfit else random.randint(mini, maxi)
         x = torch.tensor(s[begin:(begin + size)], dtype=torch.float32)
         y = torch.tensor(beats[begin:(begin + size)], dtype=torch.float32)
+        if self.onset_only:
+            y, _ = y.max(axis=-1, keepdims=True)
         return x, y
 
 
