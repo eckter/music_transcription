@@ -84,7 +84,7 @@ def transform_one(y):
     for i, diff in enumerate(string_differences):
         intermediate[:, diff:diff+25] += y[:,i,:-1]
 
-    return intermediate.clip(0, 1)#.max(axis=-1, keepdims=True)
+    return intermediate.clip(0, 1)
 
 
 def read_and_transform(xml, sample_times, n_frets=25):

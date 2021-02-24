@@ -107,8 +107,8 @@ def train(data_root, out_root, workers=0):
     train_data = SongDataset(train_files)
     val_data = SongDataset(val_files)
 
-    train_data.sample_size = 2048 * 2
-    val_data.sample_size = 2048 * 4
+    train_data.sample_length = 2048 * 2
+    val_data.sample_length = 2048 * 4
     val_data.overfit = True
 
     if workers > 0:

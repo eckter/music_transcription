@@ -10,13 +10,13 @@ from .save_files import load_with_saves
 
 
 class SongDataset(torch.utils.data.TensorDataset):
-    def __init__(self, files, multiplier=1, multithread=False, overfit=False, sample_files=128):
+    def __init__(self, files, multiplier=1, multithread=False, overfit=False, sample_length=2048):
         super(SongDataset).__init__()
         if not multithread:
             multiplier = 1
         self.data = [load_with_saves(f) for f in tqdm(files)]
         self.multiplier = multiplier
-        self.sample_size = sample_files
+        self.sample_length = sample_length
         self.overfit = overfit
         if multithread:
             self.to_multi()
@@ -29,14 +29,14 @@ class SongDataset(torch.utils.data.TensorDataset):
             index = index % len(self.data)
         if self.overfit:
             index = 0
-        return self._extract(*self.data[index], size=self.sample_size, overfit=self.overfit)
+        return self._extract(*self.data[index], size=self.sample_length, overfit=self.overfit)
 
     def to_multi(self):
         for i, (s, t, g) in enumerate(self.data):
             self.data[i] = (Array('f', s, lock=False), Array('f', t, lock=False), Array('f', g, lock=False))
 
     @staticmethod
-    def _extract(s, beats, size=freq_depth, overfit=False):
+    def _extract(s, beats, size, overfit=False):
         s = np.array(s).reshape(-1, freq_depth)
         beats = np.array(beats).reshape(s.shape[0], -1)
         mini = 0
